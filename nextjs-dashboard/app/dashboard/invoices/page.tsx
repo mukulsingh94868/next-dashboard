@@ -7,6 +7,12 @@ import { InvoicesTableSkeleton } from '@/app/ui/skeletons';
 import { Suspense } from 'react';
 import { customers, invoices } from '@/app/lib/placeholder-data';
 
+import { Metadata } from 'next';
+ 
+export const metadata: Metadata = {
+  title: 'Invoices | Acme Dashboard',
+};
+
 export default async function Page({
   searchParams,
 }: {
