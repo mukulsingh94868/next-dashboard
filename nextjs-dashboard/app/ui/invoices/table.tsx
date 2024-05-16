@@ -3,22 +3,88 @@ import { UpdateInvoice, DeleteInvoice } from '@/app/ui/invoices/buttons';
 import InvoiceStatus from '@/app/ui/invoices/status';
 import { formatDateToLocal, formatCurrency } from '@/app/lib/utils';
 import { fetchFilteredInvoices } from '@/app/lib/data';
+import { customers, invoices } from '@/app/lib/placeholder-data';
 
-export default async function InvoicesTable({
-  query,
-  currentPage,
-}: {
+type Invoice = {
+  id: string;
+  customer_id: string;
+  amount: number;
+  date: string;
+  status: string;
+};
+
+type Customer = {
+  id: string;
+  name: string;
+  email: string;
+  image_url: string;
+};
+
+type InvoiceWithCustomer = {
+  id: string;
+  amount: number;
+  date: string;
+  status: string;
+  name: string;
+  email: string;
+  image_url: string;
+};
+
+type InvoicesTableProps = {
   query: string;
   currentPage: number;
-}) {
-  const invoices = await fetchFilteredInvoices(query, currentPage);
+};
+
+export default async function InvoicesTable({ query, currentPage }: InvoicesTableProps) {
+  const ITEMS_PER_PAGE = 5;
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+
+  async function searchInvoices(query: string, ITEMS_PER_PAGE: number, offset: number): Promise<InvoiceWithCustomer[]> {
+    const lowerQuery = query.toLowerCase();
+
+    const filteredInvoices = invoices.filter((invoice) => {
+      const customer = customers.find((c) => c.id === invoice.customer_id);
+      if (!customer) return false;
+
+      return (
+        customer.name.toLowerCase().includes(lowerQuery) ||
+        customer.email.toLowerCase().includes(lowerQuery) ||
+        String(invoice.amount).toLowerCase().includes(lowerQuery) ||
+        invoice.date.toLowerCase().includes(lowerQuery) ||
+        invoice.status.toLowerCase().includes(lowerQuery)
+      );
+    });
+
+    const sortedInvoices = filteredInvoices.sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    const paginatedInvoices = sortedInvoices.slice(offset, offset + ITEMS_PER_PAGE);
+
+    const result: InvoiceWithCustomer[] = paginatedInvoices.map((invoice) => {
+      const customer = customers.find((c) => c.id === invoice.customer_id);
+      return {
+        id: invoice.customer_id,
+        amount: invoice.amount,
+        date: invoice.date,
+        status: invoice.status,
+        name: customer?.name ?? '',
+        email: customer?.email ?? '',
+        image_url: customer?.image_url ?? '',
+      };
+    });
+
+    return result;
+  }
+
+  const filteredInvoices = await searchInvoices(query, ITEMS_PER_PAGE, offset);
 
   return (
     <div className="mt-6 flow-root">
       <div className="inline-block min-w-full align-middle">
         <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
           <div className="md:hidden">
-            {invoices?.map((invoice) => (
+            {filteredInvoices?.map((invoice) => (
               <div
                 key={invoice.id}
                 className="mb-2 w-full rounded-md bg-white p-4"
@@ -78,9 +144,9 @@ export default async function InvoicesTable({
               </tr>
             </thead>
             <tbody className="bg-white">
-              {invoices?.map((invoice) => (
+              {filteredInvoices?.map((invoice, index) => (
                 <tr
-                  key={invoice.id}
+                  key={`${invoice.id}-${index}`}
                   className="w-full border-b py-3 text-sm last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg"
                 >
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">

@@ -2,8 +2,13 @@ import { Card } from '@/app/ui/dashboard/cards';
 import RevenueChart from '@/app/ui/dashboard/revenue-chart';
 import LatestInvoices from '@/app/ui/dashboard/latest-invoices';
 import { lusitana } from '@/app/ui/fonts';
-import { revenue, customers, invoices, users } from '../lib/placeholder-data';
- 
+import {
+  revenue,
+  customers,
+  invoices,
+  users,
+} from '../../lib/placeholder-data';
+
 export default async function Page() {
   const totalPaidInvoices = users?.length;
   const totalPendingInvoices = invoices?.length;
@@ -25,7 +30,7 @@ export default async function Page() {
         />
       </div>
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-4 lg:grid-cols-8">
-        <RevenueChart revenue={revenue}  />
+        <RevenueChart revenue={revenue} />
         <LatestInvoices latestInvoices={customers} />
       </div>
     </main>
